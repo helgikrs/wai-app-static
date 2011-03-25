@@ -52,6 +52,7 @@ import Data.Time
 import Data.Time.Clock.POSIX
 import System.Locale (defaultTimeLocale)
 
+import Codec.Binary.UTF8.String (decodeString, encodeString)
 import Data.List (sortBy, intercalate)
 import Data.FileEmbed (embedFile)
 
@@ -190,7 +191,7 @@ checkPieces prefix indices pieces
     | anyButLast null pieces =
         return $ Redirect $ filterButLast (not . null) pieces
     | otherwise = do
-        let fp = concat $ prefix : map ((:) '/') pieces
+        let fp = encodeString . concat $ prefix : map ((:) '/') pieces
         let (isFile, isFolder) =
                 case () of
                     ()
@@ -356,7 +357,8 @@ renderDirectoryContentsTable haskellSrc folderSrc fps =
                               then return ()
                               else H.img ! A.src (H.stringValue folderSrc)
                                          ! A.alt (H.stringValue "Folder")
-                   H.td (H.a ! A.href (H.stringValue $ mdName md ++ if mdIsFile md then "" else "/")  $ H.string $ mdName md)
+                   let dm = decodeString $ mdName md
+                   H.td (H.a ! A.href (H.stringValue $ dm ++ if mdIsFile md then "" else "/") $ H.string dm)
                    H.td ! A.class_ (H.stringValue "date") $ H.string $
                        if mdIsFile md
                            then formatCalendarTime defaultTimeLocale "%d-%b-%Y %X" $ mdModified md
